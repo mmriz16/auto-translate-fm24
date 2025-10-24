@@ -20,7 +20,7 @@ export default function Home() {
     completed: number;
     current: string;
   }>({ total: 0, completed: 0, current: '' });
-  const [currentTranslatingIndex, setCurrentTranslatingIndex] = useState(-1);
+  const [currentTranslatingIndex, setCurrentTranslatingIndex] = useState<number | null>(-1);
   const [statusMessage, setStatusMessage] = useState<string>('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(50);
@@ -495,7 +495,7 @@ export default function Home() {
       if (!cleanText.trim()) {
         alert('Tidak ada teks yang perlu diterjemahkan setelah filtering!');
         setIsTranslating(false);
-        setCurrentTranslatingIndex(null);
+        setCurrentTranslatingIndex(-1);
         return;
       }
 
@@ -545,7 +545,7 @@ export default function Home() {
       alert(`Terjemahan gagal untuk ${entry.key}: ${error}`);
     } finally {
       setIsTranslating(false);
-      setCurrentTranslatingIndex(null);
+      setCurrentTranslatingIndex(-1);
     }
   };
 
@@ -672,7 +672,7 @@ export default function Home() {
         
         // Update working entries with successful translations
         batchResults.forEach(result => {
-          if (result.success && result.translation) {
+          if (result && result.success && result.translation) {
             workingEntries[result.index] = {
               ...workingEntries[result.index],
               indonesian: result.translation
@@ -691,7 +691,7 @@ export default function Home() {
       setEntries([...workingEntries]);
       
       // Update progress based on completed entries
-      const completedInGroup = allResults.filter(r => r.success).length;
+      const completedInGroup = allResults.filter(r => r && r.success).length;
       const totalCompleted = Math.min(
         (groupStart + CONCURRENT_BATCHES) * BATCH_SIZE, 
         untranslatedEntries.length
@@ -844,7 +844,7 @@ export default function Home() {
         
         // Update working entries with successful translations
         batchResults.forEach(result => {
-          if (result.success && result.translation) {
+          if (result && result.success && result.translation) {
             workingEntries[result.index] = {
               ...workingEntries[result.index],
               indonesian: result.translation
@@ -863,7 +863,7 @@ export default function Home() {
       setEntries([...workingEntries]);
       
       // Update progress based on completed entries
-      const completedInGroup = allResults.filter(r => r.success).length;
+      const completedInGroup = allResults.filter(r => r && r.success).length;
       const totalCompleted = Math.min(
         (groupStart + CONCURRENT_BATCHES) * BATCH_SIZE, 
         untranslatedEntries.length
