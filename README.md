@@ -67,10 +67,21 @@
 
 3. **Setup Environment Variables**
    
-   Buat file `.env.local` di root directory:
-   ```env
-   OPENAI_API_KEY=your_openai_api_key_here
+   Copy file `.env.example` ke `.env.local`:
+   ```bash
+   cp .env.example .env.local
    ```
+   
+   Kemudian edit `.env.local` dan masukkan OpenAI API key Anda:
+   ```env
+   OPENAI_API_KEY=your_actual_openai_api_key_here
+   ```
+   
+   **Cara mendapatkan OpenAI API Key:**
+   - Kunjungi [OpenAI Platform](https://platform.openai.com/api-keys)
+   - Login atau buat akun baru
+   - Buat API key baru
+   - Copy dan paste ke file `.env.local`
 
 4. **Jalankan development server**
    ```bash
