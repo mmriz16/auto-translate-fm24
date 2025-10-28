@@ -134,7 +134,7 @@ export default function Home() {
     }
   }, []);
 
-  const cleanTextForTranslation = useCallback((text: string): { cleanText: string, placeholders: { [key: string]: string } } => {
+  const cleanTextForTranslation = useCallback((text: string, comment?: string): { cleanText: string, placeholders: { [key: string]: string }, contextualText: string } => {
     let cleanText = text;
     const placeholders: { [key: string]: string } = {};
     let placeholderIndex = 0;
@@ -175,7 +175,13 @@ export default function Home() {
     // Only clean up excessive spaces (but preserve single spaces and \n)
     cleanText = cleanText.replace(/[ \t]+/g, ' ').trim();
 
-    return { cleanText, placeholders };
+    // Create contextual text with comment for better AI translation
+    let contextualText = cleanText;
+    if (comment && comment.trim()) {
+      contextualText = `${cleanText} [CONTEXT: ${comment.trim()}]`;
+    }
+
+    return { cleanText, placeholders, contextualText };
   }, []);
 
   const restorePlaceholders = useCallback((translatedText: string, placeholders: { [key: string]: string }): string => {
@@ -203,10 +209,10 @@ export default function Home() {
     if (batchEntries.length === 0) return;
 
     try {
-      // Prepare texts for batch processing
+      // Prepare texts for batch processing with comments as context
       const textsToTranslate = batchEntries.map(({entry}) => {
-        const { cleanText } = cleanTextForTranslation(entry.english);
-        return cleanText;
+        const { contextualText } = cleanTextForTranslation(entry.english, entry.comment);
+        return contextualText;
       });
 
       const response = await fetch('/api/translate', {
@@ -240,7 +246,7 @@ export default function Home() {
                 );
               } else {
                 // Restore placeholders in translated text
-                const { placeholders } = cleanTextForTranslation(entry.english);
+                const { placeholders } = cleanTextForTranslation(entry.english, entry.comment);
                 const restoredText = restorePlaceholders(translatedText, placeholders);
                 setEntries(prevEntries =>
                   prevEntries.map((e, entryIndex) =>
@@ -273,14 +279,14 @@ export default function Home() {
 
   // Helper function for single entry translation (fallback)
   const translateSingleEntry = useCallback(async (entry: Entry, index: number) => {
-    const { cleanText, placeholders } = cleanTextForTranslation(entry.english);
+    const { contextualText, placeholders } = cleanTextForTranslation(entry.english, entry.comment);
     
     const response = await fetch('/api/translate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ text: cleanText }),
+      body: JSON.stringify({ text: contextualText }),
     });
 
     if (!response.ok) {
@@ -316,15 +322,15 @@ export default function Home() {
     setCurrentTranslatingIndex(index);
     
     try {
-      // Clean text and extract placeholders
-      const { cleanText, placeholders } = cleanTextForTranslation(entry.english);
+      // Clean text and extract placeholders, include comment as context
+      const { contextualText, placeholders } = cleanTextForTranslation(entry.english, entry.comment);
       
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ text: cleanText }),
+        body: JSON.stringify({ text: contextualText }),
       });
 
       if (!response.ok) {
